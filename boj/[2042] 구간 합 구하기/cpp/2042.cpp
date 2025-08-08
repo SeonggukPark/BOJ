@@ -2,8 +2,8 @@
 #include <vector>
 #define ll long long
 using namespace std;
-
-vector<ll> arr, seg;
+constexpr size_t MAX_N = 1e6;
+ll arr[MAX_N], seg[MAX_N * 4];
 
 ll seg_init(ll n, ll s, ll e){
     if(s == e) return seg[n] = arr[s];
@@ -51,11 +51,10 @@ ll seg_query(ll n, ll s, ll e, ll qs, ll qe){
 int main(){
     ios_base::sync_with_stdio(false);
     cin.tie(nullptr);
+    // freopen("input.txt", "r", stdin);
     ll N, M, K;
     cin >> N >> M >> K;
-    arr.assign(N, 0), seg.assign(N * 4, 0);
-    for(ll & i : arr) cin >> i;
-
+    for(int i = 0; i < N; ++i) cin >> arr[i];
     seg_init(1, 0, N - 1);
 
     ll a, b, c;
