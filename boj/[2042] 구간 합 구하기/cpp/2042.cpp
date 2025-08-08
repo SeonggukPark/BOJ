@@ -1,93 +1,80 @@
-#include <bits/stdc++.h>
-#define endl '\n'
+#include <iostream>
+#include <vector>
 #define ll long long
-#define pii pair<int, int>
-#define x first
-#define y second
 using namespace std;
-constexpr size_t MAX_N = 1e6;
-constexpr int INF = 1e9 + 1;
-ll arr[MAX_N + 1];
-ll seg_node[MAX_N * 4 + 1]; // max, min 순
 
-ll init_seg(ll node, ll l, ll r){
-    if(l == r) return seg_node[node] = arr[l];
-    ll m = l + (r - l) / 2;
-    ll a = init_seg(node * 2, l, m);
-    ll b = init_seg(node * 2 + 1, m + 1, r);
-    return seg_node[node] = a + b;
+vector<ll> arr, seg;
+
+ll seg_init(ll n, ll s, ll e){
+    if(s == e) return seg[n] = arr[s];
+    ll m = s + (e - s) / 2;
+    ll l = seg_init(n * 2, s, m), r = seg_init(n * 2 + 1, m + 1, e);
+    return seg[n] = l + r;
+}
+/*
+ll seg_update(ll n, ll s, ll e, ll idx, ll val){
+    // 1. 범위 밖
+    if(s > idx || e < idx) return 0;
+    seg[n] += val;
+    if(s == e) return seg[n];
+
+    ll m = s + (e - s) / 2;
+    return seg_update(n*2, s, m, idx, val) + seg_update(n*2 + 1, m + 1, e, idx, val);
+}
+*/
+void seg_update(ll n, ll s, ll e, ll idx, ll val){
+    // 1. 범위 밖
+    if(s > idx || e < idx) return;
+    if(s == e){
+        seg[n] = val;
+        return;
+    };
+
+    ll m = s + (e - s) / 2;
+    seg_update(n*2, s, m, idx, val);
+    seg_update(n*2 + 1, m + 1, e, idx, val);
+    seg[n] = seg[n*2] + seg[n*2 + 1];
 }
 
-ll query(ll node, ll tl, ll tr, ll ql, ll qr){
-    // 1. 아예 안 겹침
-    if(tr < ql || tl > qr) return 0;
+ll seg_query(ll n, ll s, ll e, ll qs, ll qe){
+    // 1. 전혀 안 겹칠 경우
+    if(qe < s | e < qs) return 0;
 
-    // 2. 완전 포함
-    if (tl >= ql && tr <= qr) return seg_node[node];
+    // 2. 트리가 쿼리에 완전히 겹칠 경우
+    if(s >= qs && e <= qe) return seg[n];
 
-    // 3. 일부 포함
-    int m = tl + (tr - tl) / 2;
-    ll a = query(node * 2, tl, m, ql, qr);
-    ll b = query(node * 2 + 1, m + 1, tr, ql, qr);
-    return a + b;
-}
-
-ll update(ll node, ll l, ll r, ll ti, ll val){
-    // 1. out of bound
-    if(l > ti || r < ti) return seg_node[node];
-    // 2. in bound
-    // 업데이트 노드 그 자체일 경우
-    if(l == r) {
-        return seg_node[node] = val;
-    }
-
-    ll m = l + (r - l) / 2;
-    ll a = update(node * 2, l, m, ti, val);
-    ll b = update(node * 2 + 1, m + 1, r, ti, val);
-    return seg_node[node] = a + b;
-}
-
-
-void init(){
-    memset(arr, 0, sizeof(arr));
-}
-
-void solve(){
-    int n, m, k;
-    cin >> n >> m >> k;
-    for (int i = 0; i < n; ++i) {
-        cin >> arr[i];
-    }
-
-    init_seg(1, 0, n - 1);
-
-    ll que, a, b;
-    ll tmp;
-    for (int i = 0; i < m + k; ++i) {
-        cin >> que >> a >> b;
-
-        switch (que) {
-            case 1:
-                update(1, 1, n, a, b);
-                break;
-            case 2:
-                tmp = query(1, 1, n, a, b);
-                // traverse(n);
-                cout << tmp << endl;
-                break;
-
-            default:
-                cout << "error occured.. " << endl;
-                break;
-        }
-    }
-    cout << endl;
+    // 3. 일부 겹칠 경우
+    ll m = s + (e - s) / 2;
+    return seg_query(n * 2, s, m, qs, qe) + seg_query(n * 2 + 1, m + 1, e, qs, qe);
 }
 
 int main(){
     ios_base::sync_with_stdio(false);
     cin.tie(nullptr);
-    init();
-    solve();
+    ll N, M, K;
+    cin >> N >> M >> K;
+    arr.assign(N, 0), seg.assign(N * 4, 0);
+    for(ll & i : arr) cin >> i;
+
+    seg_init(1, 0, N - 1);
+
+    ll a, b, c;
+    for(ll i = 0; i < M + K; ++i){
+        cin >> a >> b >> c;
+        switch (a) {
+            case 1: // update
+                seg_update(1, 0, N - 1, b - 1, c);
+                break;
+
+            case 2: // query
+                cout << seg_query(1, 0, N - 1, b - 1, c - 1) << endl;
+                break;
+
+            default:
+                cout << "Error Occured.." << endl;
+                break;
+        }
+    }
+
     return 0;
 }
